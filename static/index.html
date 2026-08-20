@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Transfer Course Equivalency Tool</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <img src="shield_ur.svg" alt="University of Richmond" class="ur-shield" />
+      <div class="header-text">
+        <p class="header-eyebrow">University of Richmond</p>
+        <h1 class="header-title">Transfer Course Equivalency Tool</h1>
+      </div>
+      <div class="header-actions">
+        <button type="button" class="btn btn-header-report" id="btn-generate-report" hidden>Generate Report</button>
+        <button type="button" class="btn-settings" id="btn-settings" aria-label="Settings">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20" aria-hidden="true">
+            <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Config warning banner (hidden when both API key and embeddings are set) -->
+  <div class="config-banner" id="config-banner" hidden>
+    <span class="config-banner-text" id="config-banner-text"></span>
+    <button type="button" class="config-banner-btn" id="btn-banner-settings">Open Settings</button>
+  </div>
+
+  <!-- Student name bar -->
+  <div class="student-bar" id="student-bar">
+    <div class="student-bar-inner">
+      <div class="student-entry">
+        <span class="student-bar-label">Student name</span>
+        <input type="text" id="student-name-input" class="student-name-input" placeholder="Enter student name" autocomplete="off" />
+        <button type="button" class="btn btn-primary btn-sm" id="btn-set-name">Set Name</button>
+      </div>
+      <p class="student-current-name" id="student-current-name" hidden></p>
+    </div>
+  </div>
+
+  <main class="layout" id="main-layout">
+
+    <!-- LEFT COLUMN: input + verify -->
+    <section class="column column-input" aria-label="Course details and description verification">
+
+      <div class="course-tabs-wrap">
+      <div class="tab-bar" id="tab-bar"></div>
+
+      <div class="panel panel--accordion" id="panel-input">
+        <button type="button" class="panel-toggle" aria-expanded="true">
+          Course details
+          <span class="panel-chevron" aria-hidden="true"></span>
+        </button>
+        <div class="panel-body">
+          <form id="course-form">
+            <div class="field">
+              <label for="outside_university">Outside university</label>
+              <input type="text" id="outside_university" name="outside_university" required autocomplete="off" />
+            </div>
+            <div class="field">
+              <label for="outside_subject">Subject</label>
+              <input type="text" id="outside_subject" name="outside_subject" required autocomplete="off" placeholder="e.g. ECON" />
+            </div>
+            <div class="field">
+              <label for="outside_code">Course code</label>
+              <input type="text" id="outside_code" name="outside_code" required autocomplete="off" placeholder="e.g. 201" />
+            </div>
+            <div class="field">
+              <label for="outside_title">Course title</label>
+              <input type="text" id="outside_title" name="outside_title" required autocomplete="off" placeholder="e.g. Principles of Microeconomics" />
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label for="term">Term <span class="optional">(optional)</span></label>
+                <input type="text" id="term" name="term" autocomplete="off" placeholder="e.g. Fall" />
+              </div>
+              <div class="field">
+                <label for="year">Year <span class="optional">(optional)</span></label>
+                <input type="text" id="year" name="year" autocomplete="off" placeholder="e.g. 2023" />
+              </div>
+            </div>
+            <div class="panel-actions">
+              <button type="submit" class="btn btn-primary" id="btn-find-description">Find course description</button>
+              <button type="button" class="btn btn-outline" id="btn-enter-description">Enter course description</button>
+              <button type="button" class="btn btn-text" id="btn-reset">Reset</button>
+            </div>
+            <p class="search-status-text" id="search-status-text" hidden></p>
+          </form>
+        </div>
+      </div>
+
+      <div class="panel panel--accordion panel--collapsed" id="panel-verify" hidden>
+        <button type="button" class="panel-toggle" aria-expanded="false">
+          Verify description
+          <span class="panel-chevron" aria-hidden="true"></span>
+        </button>
+        <div class="panel-body">
+          <p class="panel-hint" id="verify-hint">Found via web search. Edit if needed, then approve to continue.</p>
+          <a class="source-link" id="source-link" href="#" target="_blank" rel="noopener noreferrer" hidden>View source ↗</a>
+          <textarea id="description-text" rows="6" placeholder="Course description will appear here."></textarea>
+          <div class="panel-actions">
+            <button type="button" class="btn btn-primary" id="btn-approve">Approve and continue</button>
+            <button type="button" class="btn btn-text" id="btn-paste-own">Paste my own instead</button>
+          </div>
+        </div>
+      </div>
+
+      </div><!-- /.course-tabs-wrap -->
+    </section>
+
+    <!-- RIGHT COLUMN: ranked matches + saved courses -->
+    <section class="column column-results" aria-label="Ranked course matches">
+      <div class="panel" id="panel-results">
+        <p class="panel-label">Matches</p>
+        <div class="panel-body">
+
+          <div class="results-placeholder" id="results-placeholder">
+            <p>Results will appear here once a course description has been approved.</p>
+          </div>
+
+          <div class="results-status" id="results-status" hidden>
+            <p class="results-status-text" id="results-status-text">Comparing against catalog&hellip;</p>
+          </div>
+
+          <ol class="results-list" id="results-list" hidden>
+            <!-- result rows injected by app.js -->
+          </ol>
+
+          <!-- Shown after results load: select matches and save -->
+          <div class="save-matches-bar" id="save-matches-bar" hidden>
+            <span class="selected-count-label" id="selected-count-label">0 selected</span>
+            <div class="save-matches-actions">
+              <button type="button" class="btn btn-primary" id="btn-save-matches">Add to report</button>
+              <button type="button" class="btn btn-outline" id="btn-add-without-match">Add without a match</button>
+              <button type="button" class="btn btn-outline" id="btn-add-other-course">Add Other Course</button>
+            </div>
+          </div>
+
+          <!-- Inline: reason for adding without a match -->
+          <div class="inline-subform" id="no-match-reason-form" hidden>
+            <div class="field">
+              <label for="no-match-reason-text">Reason no match was found <span class="optional">(optional)</span></label>
+              <textarea id="no-match-reason-text" rows="3" placeholder="e.g. No equivalent UR course covers this topic."></textarea>
+            </div>
+            <div class="panel-actions">
+              <button type="button" class="btn btn-primary" id="btn-confirm-no-match">Confirm</button>
+              <button type="button" class="btn btn-text" id="btn-cancel-no-match">Cancel</button>
+            </div>
+          </div>
+
+          <!-- Inline: manually add a UR course as a match -->
+          <div class="inline-subform" id="add-other-course-form" hidden>
+            <div class="field">
+              <label for="other-course-name">Course Name</label>
+              <input type="text" id="other-course-name" autocomplete="off" placeholder="e.g. Principles of Microeconomics" />
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label for="other-course-code">Code</label>
+                <input type="text" id="other-course-code" autocomplete="off" placeholder="e.g. 201" />
+              </div>
+              <div class="field">
+                <label for="other-course-subject">Subject</label>
+                <input type="text" id="other-course-subject" autocomplete="off" placeholder="e.g. ECON" />
+              </div>
+            </div>
+            <div class="field">
+              <label for="other-course-reason">Reason this course is a match</label>
+              <textarea id="other-course-reason" rows="3" placeholder="Why does this UR course match the outside course?"></textarea>
+            </div>
+            <div class="panel-actions">
+              <button type="button" class="btn btn-primary" id="btn-confirm-other-course">Add to report</button>
+              <button type="button" class="btn btn-text" id="btn-cancel-other-course">Cancel</button>
+            </div>
+          </div>
+
+          <div class="previous-matches-section" id="previous-matches-section" hidden>
+            <p class="previous-matches-label">Previously matched UR courses</p>
+            <p class="previous-matches-value" id="previous-matches-value"></p>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Saved courses summary (appears after first course is saved) -->
+      <div class="panel" id="panel-saved" hidden>
+        <p class="panel-label">Saved courses (<span id="saved-count">0</span>)</p>
+        <div class="panel-body" id="saved-list"></div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Report view: replaces layout when Generate Report is clicked -->
+  <section class="report-view" id="report-view" hidden>
+    <div class="report-toolbar no-print">
+      <button type="button" class="btn btn-outline" id="btn-back-to-tool">&larr; Back to Tool</button>
+      <button type="button" class="btn btn-primary" onclick="window.print()">Print / Save as PDF</button>
+    </div>
+    <div class="report-doc">
+      <div class="report-doc-header">
+        <img src="shield_ur.svg" alt="University of Richmond" class="report-doc-shield" />
+        <div>
+          <p class="report-doc-eyebrow">University of Richmond</p>
+          <h2 class="report-doc-title">Transfer Course Equivalency Report</h2>
+        </div>
+      </div>
+      <p class="report-doc-student" id="report-doc-student"></p>
+      <div id="report-doc-courses"></div>
+    </div>
+  </section>
+
+  <!-- Tab add dropdown -->
+  <div class="tab-add-dropdown" id="tab-add-dropdown" hidden>
+    <button type="button" class="tab-add-option" id="btn-add-one">Add one course</button>
+    <button type="button" class="tab-add-option" id="btn-add-multiple">Add multiple courses</button>
+  </div>
+
+  <!-- Bulk course entry modal -->
+  <div class="modal-overlay" id="bulk-modal-overlay" hidden></div>
+  <div class="modal" id="bulk-modal" hidden aria-modal="true" aria-label="Add multiple courses">
+    <div class="modal-header">
+      <h2 class="modal-title">Add Multiple Courses</h2>
+      <button type="button" class="btn-modal-close" id="btn-bulk-close" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p class="modal-hint">Each row becomes a separate tab. Editing an existing row updates that tab and clears its results. Empty rows are ignored.</p>
+      <div class="bulk-table-wrap">
+        <table class="bulk-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>University</th>
+              <th>Subject</th>
+              <th>Course Code</th>
+              <th>Course Title</th>
+              <th>Term <span class="optional">(optional)</span></th>
+              <th>Year <span class="optional">(optional)</span></th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="bulk-table-body"></tbody>
+        </table>
+      </div>
+      <button type="button" class="btn btn-outline btn-sm" id="btn-bulk-add-row">+ Add row</button>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-text" id="btn-bulk-cancel">Cancel</button>
+      <button type="button" class="btn btn-primary" id="btn-bulk-confirm">Confirm</button>
+    </div>
+  </div>
+
+  <!-- Settings overlay (backdrop) -->
+  <div id="settings-overlay" class="settings-overlay"></div>
+
+  <!-- Settings panel (slide-in drawer) -->
+  <aside id="settings-panel" class="settings-panel" aria-label="Settings">
+    <div class="settings-header">
+      <h2 class="settings-title">Settings</h2>
+      <button type="button" class="btn-settings-close" id="btn-settings-close" aria-label="Close settings">&times;</button>
+    </div>
+
+    <div class="settings-body">
+
+      <!-- Section 1: API Key -->
+      <section class="settings-section">
+        <h3 class="settings-section-title">API Key</h3>
+        <div class="field">
+          <label for="settings-api-key">OpenAI API Key</label>
+          <input type="password" id="settings-api-key" class="settings-input" placeholder="sk-…" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label for="settings-base-url">Base URL <span class="settings-label-optional">(optional)</span></label>
+          <input type="text" id="settings-base-url" class="settings-input" placeholder="https://your-proxy.example.com/v1" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label for="settings-llm-api-key">LLM API Key <span class="settings-label-optional">(optional)</span></label>
+          <input type="password" id="settings-llm-api-key" class="settings-input" placeholder="Key for the Base URL above, if different from your OpenAI key" autocomplete="off" />
+          <p class="settings-hint">If your institution's API uses a separate key, enter it here. It will be used with the Base URL above for web search and ranking. Embeddings always use your OpenAI key.</p>
+        </div>
+        <div class="settings-row">
+          <button type="button" class="btn btn-primary btn-sm" id="btn-save-api-key">Save for this session</button>
+          <span class="settings-badge settings-badge--unset" id="api-key-badge">Not set</span>
+          <span class="settings-badge settings-badge--set" id="base-url-badge" hidden>Custom URL</span>
+        </div>
+        <p class="settings-error" id="api-key-error" hidden></p>
+      </section>
+
+      <!-- Section 2: Course Data -->
+      <section class="settings-section">
+        <h3 class="settings-section-title">Course Data</h3>
+
+        <div class="settings-instruction-box">
+          <p class="settings-instruction-label">Required CSV columns</p>
+          <p class="settings-instruction-cols"><code>SUBJ</code> &middot; <code>CRSE</code> &middot; <code>TITLE</code> &middot; <code>COURSE_DESC</code></p>
+          <p class="settings-instruction-optional">Optional: <code>COURSE_TEXT</code> (extra context for matching)</p>
+        </div>
+
+        <div class="field settings-field-top">
+          <label for="settings-csv-upload">Course catalog CSV</label>
+          <input type="file" id="settings-csv-upload" accept=".csv" class="settings-file-input" />
+        </div>
+        <p class="settings-status-line" id="settings-file-status">No file loaded</p>
+
+        <div class="settings-embeddings-area">
+          <div class="settings-row">
+            <button type="button" class="btn btn-primary btn-sm" id="btn-create-embeddings" disabled>Create Embeddings</button>
+          </div>
+          <p class="settings-status-line" id="settings-embeddings-status">No embeddings stored</p>
+          <p class="settings-error" id="embeddings-error" hidden></p>
+          <div class="settings-progress" id="settings-progress" hidden>
+            <span class="settings-progress-text" id="settings-progress-text">Generating embeddings…</span>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </aside>
+
+  <!-- Delete confirmation modal -->
+  <div class="modal-overlay" id="delete-confirm-overlay" hidden></div>
+  <div class="confirm-modal" id="delete-confirm-modal" hidden aria-modal="true" aria-label="Confirm tab deletion">
+    <h3 class="confirm-modal-title">Delete Course?</h3>
+    <p class="confirm-modal-message" id="delete-confirm-message"></p>
+    <div class="confirm-modal-actions">
+      <button type="button" class="btn btn-text" id="btn-delete-cancel">Cancel</button>
+      <button type="button" class="btn btn-danger" id="btn-delete-confirm">Delete</button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

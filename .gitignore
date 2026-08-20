@@ -1,0 +1,16 @@
+# Environment / secrets
+.env
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# OS
+.DS_Store
+
+# Raw source data — not needed to run the app.
+# Regenerate data/*.pkl from these via basic.ipynb if needed.
+Fall2026Registration.csv
+clean_ur_courses.xlsx
+courses-report.*.csv

@@ -90,7 +90,3 @@ Full request/response schemas are defined as Pydantic models in [main.py](main.p
 ## Notes on server state
 
 `app_state` (a module-level dict in [main.py:34](main.py#L34)) holds the OpenAI client, uploaded CSV, and embeddings **in process memory** — there is no database or persistence layer beyond the `data/*.pkl` files written on disk. Restarting the server clears the uploaded CSV and any API key entered via the UI (embeddings persist since they're reloaded from disk on startup). This is a single-process, single-tenant design; it is not intended to run behind multiple worker processes without changes.
-
-## Known gaps
-
-- The `previous_ur_matches` field returned by `/api/evaluate` is a stubbed `None` — a lookup against a "previous matches" sheet is planned but not wired up ([main.py:146](main.py#L146)).

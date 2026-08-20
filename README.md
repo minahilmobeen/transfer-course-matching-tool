@@ -89,4 +89,8 @@ Full request/response schemas are defined as Pydantic models in [main.py](main.p
 
 ## Notes on server state
 
-`app_state` (a module-level dict in [main.py:34](main.py#L34)) holds the OpenAI client, uploaded CSV, and embeddings **in process memory** — there is no database or persistence layer beyond the `data/*.pkl` files written on disk. Restarting the server clears the uploaded CSV and any API key entered via the UI (embeddings persist since they're reloaded from disk on startup). This is a single-process, single-tenant design; it is not intended to run behind multiple worker processes without changes.
+App state (API key, uploaded CSV, embeddings) lives in a single in-memory dict (`app_state` in [main.py:34](main.py#L34)) — there's no database.
+
+- Only `data/*.pkl` is persisted to disk; everything else is lost on restart.
+- Restarting the server clears the uploaded CSV and any API key entered via the UI. Embeddings survive restarts since they're reloaded from disk on startup.
+- Built for a single process. Running multiple `uvicorn` workers would give each worker its own separate copy of this state, causing inconsistent behavior (e.g. one worker has the API key saved, another doesn't).
